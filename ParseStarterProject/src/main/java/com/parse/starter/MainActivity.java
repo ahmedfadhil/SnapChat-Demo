@@ -8,6 +8,7 @@
  */
 package com.parse.starter;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -28,32 +29,40 @@ import java.text.ParseException;
 
 public class MainActivity extends AppCompatActivity {
 
-  EditText username;
+    EditText username;
 
-  public void signupOrLogin(View view){
-ParseUser.logInBackground(username.getText(), "pass", new LogInCallback(){
-    public void done(ParseUser user,ParseException e){
-        if (user!=null){
-            Log.i("AppInfo", "Logged In");
-        }else {
-            ParseUser user = new ParseUser();
-            user.setusername("my name");
-            user.setpassword("my pass");
 
-            user.signUpInBackground(new SignUpCallback(){
-               public void done(ParseException e){
-                   if (e==null){
-
-                   }else {
-
-                   }
-               }
-            });
-        }
+    public void showUserList() {
+        Intent i = new Intent(getApplicationContext(), UserList.class);
+        startActivity(i);
     }
-});
 
-  }
+    public void signupOrLogin(View view) {
+        ParseUser.logInBackground(username.getText().toString(), "pass", new LogInCallback() {
+            public void done(ParseUser user, ParseException e) {
+                if (user != null) {
+                    Log.i("AppInfo", "Logged In");
+                    showUserList();
+                } else {
+                    ParseUser newUser = new ParseUser();
+                    newUser.setusername(username.getText().toString());
+                    newUser.setpassword("pass");
+
+                    newUser.signUpInBackground(new SignUpCallback() {
+                        public void done(ParseException e) {
+                            if (e == null) {
+                                Log.i("AppInfo", "Signed Up");
+                                showUserList();
+                            } else {
+                                Toast.makeText(getApplicationContext(), "Couldn't sign up", Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    });
+                }
+            }
+        });
+
+    }
 
 //    public void signupOrLogin(View view) {
 //
@@ -90,37 +99,38 @@ ParseUser.logInBackground(username.getText(), "pass", new LogInCallback(){
 //
 //    }
 
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_main);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-    username = (EditText) findViewById(R.id.editText);
+        username = (EditText) findViewById(R.id.editText);
+if (ParseUser.getCurrentUser()!=null){
+    showUserList();
+}
 
-
-
-    ParseAnalytics.trackAppOpenedInBackground(getIntent());
-  }
-
-  @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    // Inflate the menu; this adds items to the action bar if it is present.
-    getMenuInflater().inflate(R.menu.menu_main, menu);
-    return true;
-  }
-
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    // Handle action bar item clicks here. The action bar will
-    // automatically handle clicks on the Home/Up button, so long
-    // as you specify a parent activity in AndroidManifest.xml.
-    int id = item.getItemId();
-
-    //noinspection SimplifiableIfStatement
-    if (id == R.id.action_settings) {
-      return true;
+        ParseAnalytics.trackAppOpenedInBackground(getIntent());
     }
 
-    return super.onOptionsItemSelected(item);
-  }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
 }
