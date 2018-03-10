@@ -1,18 +1,25 @@
 package com.parse.starter;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.ParseException;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.parse.FindCallback;
@@ -33,7 +40,67 @@ public class UserList extends AppCompatActivity {
     ArrayList<String> usernames;
     ArrayAdapter arrayAdapter;
     ListView listView;
+    Bitmap bitmap;
 
+    public void checkForImages() {
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("Image");
+        query.whereEqualTo("recipientUsername", ParseUser.getCurrentUser().getUsername());
+        query.findInBackground(new FindCallback<ParseObject>() {
+            public void done(List<ParseObject> images, ParseException e) {
+                if (e == null) {
+                    if (images.size() > 0) {
+                        for (ParseObject image : images) {
+                            image.deletInBackground();
+                            ParseFile file = image.getParseFile("image");
+                            byte[] byteArray = new byte[0];
+                            try {
+                                byteArray = file.getData();
+                                bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+                            } catch (ParseException e1) {
+                                e1.printStackTrace();
+                            }
+
+                            if (bitmap != null) {
+                                AlertDialog.Builder builder = new AlertDialog.Builder(UserList.this);
+                                builder.setTitle("You have a message!");
+                                TextView content = new TextView(UserList.this);
+                                content.setGravity(Gravity.CENTER_HORIZONTALR);
+                                content.setText(image.getString("senderUsername") + " has sent you a message");
+                                builder.setView(content);
+                                builder.setPositiveButton("View", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        Log.i("AppInfo", "Display image");
+
+
+                                        AlertDialog.Builder builder = new AlertDialog.Builder(UserList.this);
+                                        builder.setTitle("Your message!");
+                                        ImageView content = new ImageView(UserList.this);
+                                        content.setImageBitmap(bitmap);
+                                        builder.setView(content);
+                                        builder.setPositiveButton("Close", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                Log.i("AppInfo", "Image Closed");
+                                            }
+                                        });
+                                        builder.show();
+
+
+                                    }
+                                });
+                                builder.show();
+                            }
+                        }
+                    }
+
+                } else {
+                    Log.i("score", "Error" + e.getMessage());
+                }
+            }
+        });
+
+    }
 
     protected void OnActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -138,6 +205,9 @@ public class UserList extends AppCompatActivity {
 //                }
 //            }
 //        });
+
+
+        checkForImages();
 
 
     }
